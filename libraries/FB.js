@@ -5,7 +5,7 @@ class FB {
     constructor(token) {
         if (token == '' && typeof (token) != 'string')
             throw new TypeError('Token must is String');
-        this.token = '?access_token=' + token;
+        this.token = token;
     }
 
     getName() {
@@ -37,7 +37,8 @@ class FB {
      * @param postId
      */
     getInfo(postId) {
-        return axios.get(config.graph + postId + '/' + this.token + '&fields=live_views,status,secure_stream_url,stream_type,stream_url')
+        let fields = 'fields=live_views,status,secure_stream_url,stream_type,stream_url'
+        return axios.get(`${config.graph}/${postId}/?${fields}&access_token=${this.token}`)
             .catch(() => ({}));
     }
 
