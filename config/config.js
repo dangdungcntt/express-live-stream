@@ -1,5 +1,5 @@
 const config = {
-    graph: 'https://graph.facebook.com/v2.11/',
+    graph: 'https://graph.facebook.com/v2.11',
     privacy: [
         'EVERYONE',
         'ALL_FRIEND',
