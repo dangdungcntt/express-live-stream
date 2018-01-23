@@ -8,7 +8,7 @@ let axios = require('axios');
  * @param {*} linkPath
  * @return false|object
  */
-async function test(linkPath) {
+module.exports = async (linkPath) => {
     if (linkPath.search('youtube') > -1) {
         let info = await ytdl.getInfo(linkPath).catch(err => (false));
 
