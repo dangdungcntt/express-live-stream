@@ -1,8 +1,13 @@
-let fb = require('../libraries/FB');
-let tokenmodel = require('../models/Token');
-let config = require('../config/config');
 let cmd = require('node-cmd');
+
+let config = require('../config/config');
+
 let cmdrun = require('../config/cmdrun');
+
+let fb = require('../libraries/FB');
+let Media = require('../libraries/media');
+
+
 
 let token = 'EAACW5Fg5N2IBAGa3qDwDJfqWBLBnjIdZBfvJpzAXcvkqHwP9Ol2ekv97lwbGTNoDEZBS5DcOpAVIXAaBZCJR3xjZCcSeyWCWa23ymUGyYglEadPQELHRQuBZBerB9MPQjnYAUa2hRFpZBNkI932hpHt0gUP2QhGI4t07lCUen9AQ5T9r7mB9QU';
 
@@ -18,7 +23,7 @@ const StreamController = {
     async getStreamUrl(req, res) {
 
         let {
-            id, description, privacy, file
+            id, description, privacy, file = undefined, text, image, loop = 1
         } = req.body;
 
         let response = await fb.createStream({id, description, privacy, access_token: token});
@@ -27,17 +32,41 @@ const StreamController = {
         data.stream_url = data.stream_url.replace('rtmps://rtmp.facebook.com:443/rtmp/', '');
         res.json(data);
 
-        // cmd.get(
-        //     cmdrun.runLive
-        //         .replace('${token}', data.stream_url)
-        //         .replace('${file}', req.body.file)
-        //         .replace('${loop}', '1')
-        // );
+        if (file) {
+            let video = await Media.checkVideo({linkPath: file});
+            console.log('VIDEO');
+            console.log(file);
+            console.log(video);
+            if (!video) return;
 
-        console.log(cmdrun.runLive
-            .replace('${token}', data.stream_url)
-            .replace('${file}', req.body.file)
-            .replace('${loop}', '1'));
+            let img = await Media.checkImage({imagePath: image});
+            console.log('IMG');
+            console.log(image);
+            console.log(img);
+
+            image = `-i "${image}"`;
+
+            if (!img) {
+                image = ''
+            }
+
+            console.log(cmdrun.runLive
+                .replace('${token}', data.stream_url)
+                .replace('${file}', video.url)
+                .replace('${loop}', loop)
+                .replace('${image}', image)
+                .replace('${text}', text)
+            );
+
+            cmd.get(
+                cmdrun.runLive
+                    .replace('${token}', data.stream_url)
+                    .replace('${file}', video.url)
+                    .replace('${loop}', loop)
+                    .replace('${image}', image)
+                    .replace('${text}', text)
+            );
+        }
 
     },
 
