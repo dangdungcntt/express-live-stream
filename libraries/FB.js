@@ -1,69 +1,68 @@
 var config = require('../config/config');
 var axios = require('axios');
 
-class FB {
-    constructor(token) {
-        if (token == '' && typeof (token) != 'string')
-            throw new TypeError('Token must is String');
-        this.token = token;
-    }
-
-    getName() {
-        return axios.get(config.graph + 'me' + this.token + '&fields=id,name');
-    }
-
+const FB = {
     /**
-     * create a stream in Facebook
      *
      * @param id
      * @param description
      * @param privacy
-     * @returns {*|AxiosPromise<any>}
+     * @param access_token
+     * @returns {Promise<T | {data: {}}>}
      */
-    createStream({id = 'me', description = null, privacy = 'EVERYONE'}) {
+    createStream({id = 'me', description = null, privacy = 'EVERYONE', access_token}) {
         let exist = config.privacy.includes(privacy);
         if (!exist) {
             privacy = 'EVERYONE';
         }
         return axios.post(`${config.graph}/${id}/live_videos`, {
-            access_token: this.token,
+            access_token,
             description: description,
             privacy: '{"value" : "' + privacy + '"}'
         }).catch(() => ({data: {}}));
-    }
+    },
 
     /**
-     * get status of live video id
      *
      * @param postId
+     * @param access_token
+     * @returns {Promise<Promise|*|Promise<T | {}>>}
      */
-    getInfo(postId) {
+    async getInfo({postId, access_token}) {
         let fields = 'fields=live_views,status,secure_stream_url,stream_type,stream_url';
 
-        return axios.get(`${config.graph}/${postId}/?${fields}&access_token=${this.token}`)
+        return axios.get(`${config.graph}/${postId}/?${fields}&access_token=${access_token}`)
             .catch(() => ({}));
-    }
+    },
 
-    async endLive({postId}) {
+    /**
+     *
+     * @param postId
+     * @param access_token
+     * @returns {Promise<{success: boolean}>}
+     */
+    async endLive({postId, access_token}) {
         let response = await axios.post(`${config.graph}/${postId}`, {
-            access_token: this.token,
+            access_token,
             end_live_video: true
         }).catch((err) => ({data: {}}));
 
-        if (response.data.id) {
-            return {success: true}
-        }
+        return {success: !!response.data.id}
+    },
 
-        return {success: false}
-    }
-
-    async deleteLive({postId}) {
-        let response = await axios.delete(`${config.graph}/${postId}?access_token=${this.token}`)
+    /**
+     *
+     * @param postId
+     * @param access_token
+     * @returns {Promise<{success: boolean|*|Event}>}
+     */
+    async deleteLive({postId, access_token}) {
+        let response = await axios.delete(`${config.graph}/${postId}?access_token=${access_token}`)
             .catch(() => ({data: {}}));
 
         return {success: response.data.success};
     }
 
-}
+};
 
 module.exports = FB;
