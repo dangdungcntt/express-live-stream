@@ -8,10 +8,12 @@ let checker = require('../helpers/checkVideo');
 
 stream = new streamController();
 
-router.get('/', stream.getStreamUrl);
-router.post('/', stream.getStreamUrl);
+router.get('/videos', stream.getStreamUrl);
+router.post('/videos', stream.getStreamUrl);
 
-router.get('/info/:id', stream.getInfo);
+router.get('/videos/:id', stream.getInfo);
+router.post('/videos/:id', stream.updateInfo);
+router.delete('/videos/:id', stream.delete);
 
 router.get('/image', async (req, res) => {
     // let linkPath = 'https://www.youtube.com/watch?v=g20t_K9dlhU';

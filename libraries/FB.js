@@ -25,9 +25,10 @@ class FB {
         if (!exist) {
             privacy = 'EVERYONE';
         }
-        return axios.post(config.graph + id + '/live_videos' + this.token, {
+        return axios.post(`${config.graph}/${id}/live_videos`, {
+            access_token: this.token,
             description: description,
-            privacy: '{"value" : "' + privacy + '"}',
+            privacy: '{"value" : "' + privacy + '"}'
         }).catch(() => ({data: {}}));
     }
 
@@ -37,9 +38,30 @@ class FB {
      * @param postId
      */
     getInfo(postId) {
-        let fields = 'fields=live_views,status,secure_stream_url,stream_type,stream_url'
+        let fields = 'fields=live_views,status,secure_stream_url,stream_type,stream_url';
+
         return axios.get(`${config.graph}/${postId}/?${fields}&access_token=${this.token}`)
             .catch(() => ({}));
+    }
+
+    async endLive({postId}) {
+        let response = await axios.post(`${config.graph}/${postId}`, {
+            access_token: this.token,
+            end_live_video: true
+        }).catch((err) => ({data: {}}));
+
+        if (response.data.id) {
+            return {success: true}
+        }
+
+        return {success: false}
+    }
+
+    async deleteLive({postId}) {
+        let response = await axios.delete(`${config.graph}/${postId}?access_token=${this.token}`)
+            .catch(() => ({data: {}}));
+
+        return {success: response.data.success};
     }
 
 }
