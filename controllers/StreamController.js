@@ -5,7 +5,7 @@ let config = require('../config/config');
 let cmdrun = require('../config/cmdrun');
 
 let fb = require('../libraries/FB');
-let Media = require('../libraries/media');
+let Media = require('../libraries/Media');
 
 
 
@@ -103,7 +103,7 @@ const StreamController = {
                     res.status(400);
                 }
                 return res.send(data);
-            default : res.send({});
+            default : res.status(404).send({error: {message: 'Action not allowed'} });
         }
     },
 

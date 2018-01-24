@@ -1,5 +1,5 @@
 const axios = require('axios');
-const ytdl = require('ytdl-core');
+const ytdl = require('./Youtube');
 
 module.exports = {
     /**
@@ -21,17 +21,16 @@ module.exports = {
      */
     async checkVideo({linkPath}) {
         if (linkPath.search('youtube') > -1) {
-            let info = await
-            ytdl.getInfo(linkPath).catch(err => (false));
+            let info = await ytdl.getInfo({url: linkPath}).catch(err => (false));
 
             if (!info) return false;
 
             let el = info.formats.find(el => {
-                return typeof el.quality_label !== 'undefined';
+                return typeof el.quality !== 'undefined';
             });
 
             let el720 = info.formats.find(el => {
-                return typeof el.quality_label !== 'undefined' && el.quality_label === '720p';
+                return typeof el.quality !== 'undefined' && el.quality.indexOf('720p') > -1;
             });
 
             if (el720) {
@@ -41,7 +40,7 @@ module.exports = {
             return {
                 title: info.title,
                 url: el.url,
-                quality_label: el.quality_label
+                quality: el.quality
             };
         }
 

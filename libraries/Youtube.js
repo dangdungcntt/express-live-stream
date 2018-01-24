@@ -1,5 +1,80 @@
 const axios = require('axios');
-const fs = require('fs');
+
+const getInfo = async ({url}) => {
+
+    let video_id = getVideoId({url});
+
+    if (!video_id) return false;
+
+    let ytApi = 'http://www.youtube.com/get_video_info';
+
+    let response = await axios.get(ytApi, {
+        params: {video_id}
+    }).catch(err => ({data: false}));
+
+    if (!response.data) return false;
+
+    let video_info = response.data;
+
+    let data = {};
+
+    parse_str(video_info, data);
+
+    let {
+        url_encoded_fmt_stream_map,
+        title, thumbnail_url
+    } = data;
+
+    let streamsMap = url_encoded_fmt_stream_map.split(',');
+
+    let formats = [];
+
+    for (let stream of streamsMap) {
+        let format = {};
+        parse_str(stream, format);
+
+        formats.push(format);
+    }
+
+    return { video_id, title, thumbnail_url, formats }
+};
+
+const getVideoId = ({url}) => {
+    let opts = {fuzzy: true};
+
+    if (/youtu\.?be/.test(url)) {
+
+        // Look first for known patterns
+        let i;
+        let patterns = [
+            /youtu\.be\/([^#\&\?]{11})/,  // youtu.be/<id>
+            /\?v=([^#\&\?]{11})/,         // ?v=<id>
+            /\&v=([^#\&\?]{11})/,         // &v=<id>
+            /embed\/([^#\&\?]{11})/,      // embed/<id>
+            /\/v\/([^#\&\?]{11})/         // /v/<id>
+        ];
+
+        // If any pattern matches, return the ID
+        for (i = 0; i < patterns.length; ++i) {
+            if (patterns[i].test(url)) {
+                return patterns[i].exec(url)[1];
+            }
+        }
+
+        if (opts.fuzzy) {
+            // If that fails, break it apart by certain characters and look
+            // for the 11 character key
+            let tokens = url.split(/[\/\&\?=#\.\s]/g);
+            for (i = 0; i < tokens.length; ++i) {
+                if (/^[^#\&\?]{11}$/.test(tokens[i])) {
+                    return tokens[i];
+                }
+            }
+        }
+    }
+
+    return null;
+};
 
 const parse_str = (str, array) => {
 
@@ -103,89 +178,9 @@ const parse_str = (str, array) => {
     }
 };
 
-const getInfo = async ({url}) => {
-
-    let video_id = getVideoId({url});
-
-    if (!video_id) return false;
-
-    let ytApi = 'http://www.youtube.com/get_video_info';
-
-    let response = await axios.get(ytApi, {
-        params: {video_id}
-    }).catch(err => ({data: false}));
-
-    if (!response.data) return false;
-
-    let video_info = response.data;
-
-    let data = {};
-
-    parse_str(video_info, data);
-
-    let {
-        url_encoded_fmt_stream_map,
-        title, thumbnail_url
-    } = data;
-
-    let streamsMap = url_encoded_fmt_stream_map.split(',');
-
-    let formats = [];
-
-    for (let stream of streamsMap) {
-        let format = {};
-        parse_str(stream, format);
-
-        formats.push(format);
-    }
-
-    return { video_id, title, thumbnail_url, formats }
-};
-
-const getVideoId = ({url}) => {
-    let opts = {fuzzy: true};
-
-    if (/youtu\.?be/.test(url)) {
-
-        // Look first for known patterns
-        let i;
-        let patterns = [
-            /youtu\.be\/([^#\&\?]{11})/,  // youtu.be/<id>
-            /\?v=([^#\&\?]{11})/,         // ?v=<id>
-            /\&v=([^#\&\?]{11})/,         // &v=<id>
-            /embed\/([^#\&\?]{11})/,      // embed/<id>
-            /\/v\/([^#\&\?]{11})/         // /v/<id>
-        ];
-
-        // If any pattern matches, return the ID
-        for (i = 0; i < patterns.length; ++i) {
-            if (patterns[i].test(url)) {
-                return patterns[i].exec(url)[1];
-            }
-        }
-
-        if (opts.fuzzy) {
-            // If that fails, break it apart by certain characters and look
-            // for the 11 character key
-            let tokens = url.split(/[\/\&\?=#\.\s]/g);
-            for (i = 0; i < tokens.length; ++i) {
-                if (/^[^#\&\?]{11}$/.test(tokens[i])) {
-                    return tokens[i];
-                }
-            }
-        }
-    }
-
-    return null;
-};
-
-(async function () {
-    let data = await getInfo({url: 'https://www.youtube.com/watch?v=J5yTcZ0OKlI'})
-    console.log(data);
-})();
-
 module.exports = {
-    getInfo
+    getInfo,
+    getVideoId
 };
 
 

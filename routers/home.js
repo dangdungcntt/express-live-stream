@@ -1,7 +1,7 @@
 let express = require('express');
 let router = express.Router();
 let stream = require('../controllers/StreamController');
-let Media = require('../libraries/media');
+let Media = require('../libraries/Media');
 
 
 router.get('/videos', stream.getStreamUrl);
